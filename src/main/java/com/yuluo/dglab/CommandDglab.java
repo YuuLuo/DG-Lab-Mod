@@ -11,7 +11,7 @@ public class CommandDglab extends CommandBase {
     private CommandDglabStrength strengthHandler;
     private CommandDglabPunish punishHandler;
 
-    private List<String> subCommands = Arrays.asList("connect", "disconnect", "getstrength", "setmaxstrengtha", "setmaxstrengthb", "getmaxstrength", "setstrength", "addstrength", "setbasestrength", "punish", "ultrapunish", "setpunishtime", "setpunishrate", "getpunishsetting");
+    private List<String> subCommands = Arrays.asList("connect", "disconnect", "getstrength", "setmaxstrength", "getmaxstrength", "setstrength", "addstrength", "setbasestrength", "getbasestrength", "punish", "ultrapunish", "setpunishtime", "setpunishrate", "getpunishsetting");
 
     public CommandDglab() {
         connectHandler = new CommandDglabConnect();
@@ -29,13 +29,13 @@ public class CommandDglab extends CommandBase {
         return "/dglab <command>\n" +
                 "/dglab connect <your phone's ip>\n" +
                 "/dglab disconnect\n" +
-                "/dglab getStrength\n" +
-                "/dglab setMaxStrengthA [10~276]\n" +
-                "/dglab setMaxStrengthB [10~276]\n" +
-                "/dglab getMaxStrength\n" +
                 "/dglab setStrength [0~maxStrengthA] [0~maxStrengthB]\n" +
+                "/dglab getStrength\n" +
+                "/dglab setMaxStrength [20~276] [20~276]\n" +
+                "/dglab getMaxStrength\n" +
                 "/dglab addStrength <A/B> [value]\n" +
-                "/dglab setBaseStrength [seconds]\n" +
+                "/dglab setBaseStrength [value]\n" +
+                "/dglab getBaseStrength\n" +
                 "/dglab setPunishTime [seconds]\n" +
                 "/dglab setPunishRate [value]\n" +
                 "/dglab getPunishSetting\n";
@@ -60,12 +60,14 @@ public class CommandDglab extends CommandBase {
                 connectHandler.processCommand(sender, args);
             } else if ("getStrength".equalsIgnoreCase(subCommand)) {
                 strengthHandler.processCommand(sender, args);
-            } else if ("setMaxStrengthA".equalsIgnoreCase(subCommand) || "setMaxStrengthB".equalsIgnoreCase(subCommand)){
-                if (args.length < 2) {
+            } else if ("setMaxStrength".equalsIgnoreCase(subCommand)){
+                if (args.length < 3) {
                     throw new WrongUsageException(strengthHandler.getCommandUsage(sender));
                 }
-                strengthHandler.processCommand(sender, Arrays.copyOfRange(args, 1, args.length));
-            } else if ("setStrength".equalsIgnoreCase(subCommand)){
+                strengthHandler.processCommand(sender, args);
+            } else if ("getMaxStrength".equalsIgnoreCase(subCommand)) {
+                strengthHandler.processCommand(sender, args);
+            }else if ("setStrength".equalsIgnoreCase(subCommand)){
                 if (args.length < 3) {
                     throw new WrongUsageException(strengthHandler.getCommandUsage(sender));
                 }
@@ -79,6 +81,8 @@ public class CommandDglab extends CommandBase {
                 if (args.length < 3) {
                     throw new WrongUsageException(strengthHandler.getCommandUsage(sender));
                 }
+                strengthHandler.processCommand(sender, args);
+            } else if ("getBaseStrength".equalsIgnoreCase(subCommand)) {
                 strengthHandler.processCommand(sender, args);
             } else if ("setPunishTime".equalsIgnoreCase(subCommand)){
                 if (args.length < 2) {
@@ -98,6 +102,7 @@ public class CommandDglab extends CommandBase {
                 punishHandler.processCommand(sender, args);
             }
         } else {
+            System.out.println("2");
             throw new WrongUsageException(getCommandUsage(sender));
         }
     }

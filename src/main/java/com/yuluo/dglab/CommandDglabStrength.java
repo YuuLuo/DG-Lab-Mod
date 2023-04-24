@@ -81,7 +81,19 @@ public class CommandDglabStrength extends CommandBase implements CommandDglabCon
             baseStrengthB = Integer.parseInt(args[2]);
             sender.addChatMessage(new ChatComponentText("Successfully set baseStrengthA to: " + baseStrengthA));
             sender.addChatMessage(new ChatComponentText("Successfully set baseStrengthB to: " + baseStrengthB));
+        }else if(subCommand.equals("getbasestrength")){
+            sender.addChatMessage(new ChatComponentText("BaseStrengthA: " + baseStrengthA));
+            sender.addChatMessage(new ChatComponentText("BaseStrengthB: " + baseStrengthB));
+        } else if(subCommand.equals("setmaxstrength")){
+            maxStrengthA = Integer.parseInt(args[1]);
+            maxStrengthB = Integer.parseInt(args[2]);
+            sender.addChatMessage(new ChatComponentText("Successfully set maxStrengthA to: " + maxStrengthA));
+            sender.addChatMessage(new ChatComponentText("Successfully set maxStrengthB to: " + maxStrengthB));
+        }else if(subCommand.equals("getmaxstrength")){
+            sender.addChatMessage(new ChatComponentText("MaxStrengthA: " + maxStrengthA));
+            sender.addChatMessage(new ChatComponentText("MaxStrengthB: " + maxStrengthB));
         }
+
 
 
 
