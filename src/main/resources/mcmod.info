@@ -1,0 +1,16 @@
+[
+{
+  "modid": "dglab",
+  "name": "DG-Lab Controller",
+  "description": "A mod used to control a DG-Lab device in minecraft.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://twitter.com/yuluoqwq",
+  "updateUrl": "",
+  "authorList": ["yuluo"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
