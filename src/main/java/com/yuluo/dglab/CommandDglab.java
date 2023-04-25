@@ -1,17 +1,16 @@
 package com.yuluo.dglab;
 
-import net.minecraft.command.*;
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.command.WrongUsageException;
 import net.minecraft.util.ChatComponentText;
 
 import java.util.Arrays;
-import java.util.List;
 
 public class CommandDglab extends CommandBase {
-    private CommandDglabConnect connectHandler;
-    private CommandDglabStrength strengthHandler;
-    private CommandDglabPunish punishHandler;
-
-    private List<String> subCommands = Arrays.asList("connect", "disconnect", "getstrength", "setmaxstrength", "getmaxstrength", "setstrength", "addstrength", "setbasestrength", "getbasestrength", "punish", "ultrapunish", "setpunishtime", "setpunishrate", "getpunishsetting");
+    private final CommandDglabConnect connectHandler;
+    private final CommandDglabStrength strengthHandler;
+    private final CommandDglabPunish punishHandler;
 
     public CommandDglab() {
         connectHandler = new CommandDglabConnect();
@@ -42,68 +41,59 @@ public class CommandDglab extends CommandBase {
     }
 
     @Override
-    public void processCommand(ICommandSender sender, String[] args) throws WrongUsageException{
-        if (args.length == 0 || "help".equalsIgnoreCase(args[0])) {
+    public void processCommand(ICommandSender sender, String[] args) throws WrongUsageException {
+        if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
             displayHelp(sender);
             return;
         }
 
         String subCommand = args[0].toLowerCase();
 
-        if (subCommands.contains(subCommand)) {
-            if ("connect".equalsIgnoreCase(subCommand)) {
+        switch (subCommand) {
+            case "connect":
                 if (args.length < 2) {
                     throw new WrongUsageException(connectHandler.getCommandUsage(sender));
                 }
                 connectHandler.processCommand(sender, Arrays.copyOfRange(args, 1, args.length));
-            } else if ("disconnect".equalsIgnoreCase(subCommand)) {
+                break;
+
+            case "disconnect":
                 connectHandler.processCommand(sender, args);
-            } else if ("getStrength".equalsIgnoreCase(subCommand)) {
+                break;
+
+            case "getstrength":
+            case "getbasestrength":
+            case "getmaxstrength":
                 strengthHandler.processCommand(sender, args);
-            } else if ("setMaxStrength".equalsIgnoreCase(subCommand)){
+                break;
+
+            case "setmaxstrength":
+            case "setbasestrength":
+            case "addstrength":
+            case "setstrength":
                 if (args.length < 3) {
                     throw new WrongUsageException(strengthHandler.getCommandUsage(sender));
                 }
                 strengthHandler.processCommand(sender, args);
-            } else if ("getMaxStrength".equalsIgnoreCase(subCommand)) {
-                strengthHandler.processCommand(sender, args);
-            }else if ("setStrength".equalsIgnoreCase(subCommand)){
-                if (args.length < 3) {
-                    throw new WrongUsageException(strengthHandler.getCommandUsage(sender));
-                }
-                strengthHandler.processCommand(sender, args);
-            } else if ("addStrength".equalsIgnoreCase(subCommand)){
-                if (args.length < 3) {
-                    throw new WrongUsageException(strengthHandler.getCommandUsage(sender));
-                }
-                strengthHandler.processCommand(sender, args);
-            } else if ("setBaseStrength".equalsIgnoreCase(subCommand)){
-                if (args.length < 3) {
-                    throw new WrongUsageException(strengthHandler.getCommandUsage(sender));
-                }
-                strengthHandler.processCommand(sender, args);
-            } else if ("getBaseStrength".equalsIgnoreCase(subCommand)) {
-                strengthHandler.processCommand(sender, args);
-            } else if ("setPunishTime".equalsIgnoreCase(subCommand)){
+                break;
+
+            case "setpunishtime":
+            case "setpunishrate":
                 if (args.length < 2) {
                     throw new WrongUsageException(punishHandler.getCommandUsage(sender));
                 }
                 punishHandler.processCommand(sender, args);
-            } else if ("setPunishRate".equalsIgnoreCase(subCommand)){
-                if (args.length < 2) {
-                    throw new WrongUsageException(punishHandler.getCommandUsage(sender));
-                }
+                break;
+
+            case "getpunishsetting":
+            case "punish":
+            case "ultrapunish":
                 punishHandler.processCommand(sender, args);
-            } else if("getPunishSetting".equalsIgnoreCase(subCommand)){
-                punishHandler.processCommand(sender, args);
-            } else if("punish".equalsIgnoreCase(subCommand)){
-                punishHandler.processCommand(sender, args);
-            } else if("ultrapunish".equalsIgnoreCase(subCommand)){
-                punishHandler.processCommand(sender, args);
-            }
-        } else {
-            System.out.println("2");
-            throw new WrongUsageException(getCommandUsage(sender));
+                break;
+
+            default:
+                System.out.println("2");
+                throw new WrongUsageException(getCommandUsage(sender));
         }
     }
 

@@ -1,10 +1,11 @@
 package com.yuluo.dglab;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.neovisionaries.ws.client.WebSocket;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
-import com.neovisionaries.ws.client.WebSocket;
-import org.json.JSONObject;
 
 public class CommandDglabStrength extends CommandBase implements CommandDglabConnect.WebSocketMessageCallback {
     public static int maxStrengthA = 100;
@@ -62,78 +63,99 @@ public class CommandDglabStrength extends CommandBase implements CommandDglabCon
         }
         // Set the callback for the WebSocket messages
         CommandDglabConnect.setWebSocketMessageCallback(this);
-        if(subCommand.equals("getstrength")) {
-            queryStrength(sender, false);
-        }else if(subCommand.equals("setstrength")){
-            int strengthA = Integer.parseInt(args[1]);
-            int strengthB = Integer.parseInt(args[2]);
-            setStrength(sender, strengthA, strengthB);
-        }else if (subCommand.equals("addstrength")) {
-            if (args.length < 3) {
-                sender.addChatMessage(new ChatComponentText("Usage: /dglab addstrength <A/B> [strength]"));
-                return;
-            }
-            String channel = args[1].toLowerCase();
-            int strength = Integer.parseInt(args[2]);
-            addStrength(sender, channel, strength);
-        }else if(subCommand.equals("setbasestrength")){
-            baseStrengthA = Integer.parseInt(args[1]);
-            baseStrengthB = Integer.parseInt(args[2]);
-            sender.addChatMessage(new ChatComponentText("Successfully set baseStrengthA to: " + baseStrengthA));
-            sender.addChatMessage(new ChatComponentText("Successfully set baseStrengthB to: " + baseStrengthB));
-        }else if(subCommand.equals("getbasestrength")){
-            sender.addChatMessage(new ChatComponentText("BaseStrengthA: " + baseStrengthA));
-            sender.addChatMessage(new ChatComponentText("BaseStrengthB: " + baseStrengthB));
-        } else if(subCommand.equals("setmaxstrength")){
-            maxStrengthA = Integer.parseInt(args[1]);
-            maxStrengthB = Integer.parseInt(args[2]);
-            sender.addChatMessage(new ChatComponentText("Successfully set maxStrengthA to: " + maxStrengthA));
-            sender.addChatMessage(new ChatComponentText("Successfully set maxStrengthB to: " + maxStrengthB));
-        }else if(subCommand.equals("getmaxstrength")){
-            sender.addChatMessage(new ChatComponentText("MaxStrengthA: " + maxStrengthA));
-            sender.addChatMessage(new ChatComponentText("MaxStrengthB: " + maxStrengthB));
+
+        switch (subCommand) {
+            case "getstrength":
+                queryStrength(sender, false);
+                break;
+            case "setstrength":
+                int strengthA = Integer.parseInt(args[1]);
+                int strengthB = Integer.parseInt(args[2]);
+                setStrength(sender, strengthA, strengthB);
+                break;
+            case "addstrength":
+                if (args.length < 3) {
+                    sender.addChatMessage(new ChatComponentText("Usage: /dglab addstrength <A/B> [strength]"));
+                    return;
+                }
+                String channel = args[1].toLowerCase();
+                int strength = Integer.parseInt(args[2]);
+                addStrength(sender, channel, strength);
+                break;
+            case "setbasestrength":
+                baseStrengthA = Integer.parseInt(args[1]);
+                baseStrengthB = Integer.parseInt(args[2]);
+                sender.addChatMessage(new ChatComponentText("Successfully set baseStrengthA to: " + baseStrengthA));
+                sender.addChatMessage(new ChatComponentText("Successfully set baseStrengthB to: " + baseStrengthB));
+                break;
+            case "getbasestrength":
+                sender.addChatMessage(new ChatComponentText("BaseStrengthA: " + baseStrengthA));
+                sender.addChatMessage(new ChatComponentText("BaseStrengthB: " + baseStrengthB));
+                break;
+            case "setmaxstrength":
+                maxStrengthA = Integer.parseInt(args[1]);
+                maxStrengthB = Integer.parseInt(args[2]);
+                sender.addChatMessage(new ChatComponentText("Successfully set maxStrengthA to: " + maxStrengthA));
+                sender.addChatMessage(new ChatComponentText("Successfully set maxStrengthB to: " + maxStrengthB));
+                break;
+            case "getmaxstrength":
+                sender.addChatMessage(new ChatComponentText("MaxStrengthA: " + maxStrengthA));
+                sender.addChatMessage(new ChatComponentText("MaxStrengthB: " + maxStrengthB));
+                break;
         }
-
-
-
-
     }
+
     @Override
     public void onWebSocketMessage(ICommandSender sender, String message) {
-        JSONObject response = new JSONObject(message);
+        JsonParser jsonParser = new JsonParser();
+        JsonObject response = jsonParser.parse(message).getAsJsonObject();
+
         System.out.println(message);
-        int responseId = response.getInt("id");
+        int responseId = response.get("id").getAsInt();
 
-        if (responseId == 100001) { // queryStrength response
-            // Process the response
-            JSONObject responseData = response.getJSONObject("data");
-            int totalStrengthA = responseData.getInt("totalStrengthA") == 0 ? 0 : responseData.getInt("totalStrengthA") - 9;
-            int totalStrengthB = responseData.getInt("totalStrengthB") == 0 ? 0 : responseData.getInt("totalStrengthB") - 9;
+        switch (responseId) {
+            case 100001: { // queryStrength response
+                // Process the response
+                JsonObject responseData = response.get("data").getAsJsonObject();
+                int totalStrengthA = responseData.get("totalStrengthA").getAsInt();
+                totalStrengthA = totalStrengthA == 0 ? 0 : totalStrengthA - 9;
+                int totalStrengthB = responseData.get("totalStrengthB").getAsInt();
+                totalStrengthB = totalStrengthB == 0 ? 0 : totalStrengthB - 9;
 
-            // Send the message to the player
-            sender.addChatMessage(new ChatComponentText("Strength values:"));
-            sender.addChatMessage(new ChatComponentText("Total Strength A: " + totalStrengthA));
-            sender.addChatMessage(new ChatComponentText("Total Strength B: " + totalStrengthB));
-        } else if (responseId == 100002) { // setStrength response
-            if (response.getInt("code") == 0) {
-                System.out.println("Strength values set successfully.");
-                //sender.addChatMessage(new ChatComponentText("Strength values set successfully."));
-            } else {
-                System.out.println("Failed to set strength values. ");
-                sender.addChatMessage(new ChatComponentText("Failed to set strength values. Error: " + response.getString("result")));
+                // Send the message to the player
+                sender.addChatMessage(new ChatComponentText("Strength values:"));
+                sender.addChatMessage(new ChatComponentText("Total Strength A: " + totalStrengthA));
+                sender.addChatMessage(new ChatComponentText("Total Strength B: " + totalStrengthB));
+                break;
             }
-        }else if (responseId == 100003) { //addStrength response
-            if (response.getInt("code") == 0) {
-                System.out.println("Strength values added successfully.");
-            } else {
-                System.out.println("Failed to add strength values. ");
-                sender.addChatMessage(new ChatComponentText("Failed to add strength values. Error: " + response.getString("result")));
+            case 100002: {// setStrength response
+                if (response.get("code").getAsInt() == 0) {
+                    System.out.println("Strength values set successfully.");
+                    //sender.addChatMessage(new ChatComponentText("Strength values set successfully."));
+                } else {
+                    System.out.println("Failed to set strength values. ");
+                    sender.addChatMessage(new ChatComponentText("Failed to set strength values. Error: " + response.get("result").getAsString()));
+                }
+                break;
             }
-        }else if (responseId == 100000) { // queryStrength(Hide) response
-            // Process the response
-            JSONObject responseData = response.getJSONObject("data");
-            int totalStrengthA = responseData.getInt("totalStrengthA") == 0 ? 0 : responseData.getInt("totalStrengthA") - 9;
-            int totalStrengthB = responseData.getInt("totalStrengthB") == 0 ? 0 : responseData.getInt("totalStrengthB") - 9;
+            case 100003: {  //addStrength response
+                if (response.get("code").getAsInt() == 0) {
+                    System.out.println("Strength values added successfully.");
+                } else {
+                    System.out.println("Failed to add strength values. ");
+                    sender.addChatMessage(new ChatComponentText("Failed to add strength values. Error: " + response.get("result").getAsString()));
+                }
+                break;
+            }
+            case 100000: { // queryStrength(Hide) response
+                // Process the response
+                JsonObject responseData = response.get("data").getAsJsonObject();
+                int totalStrengthA = responseData.get("totalStrengthA").getAsInt();
+                totalStrengthA = totalStrengthA == 0 ? 0 : totalStrengthA - 9;
+                int totalStrengthB = responseData.get("totalStrengthB").getAsInt();
+                totalStrengthB = totalStrengthB == 0 ? 0 : totalStrengthB - 9;
+                break;
+            }
         }
     }
 
@@ -156,19 +178,19 @@ public class CommandDglabStrength extends CommandBase implements CommandDglabCon
         }
         currentStrengthA = strengthA;
         currentStrengthB = strengthB;
-        strengthA = strengthA==0?0:strengthA+9;
-        strengthB = strengthB==0?0:strengthB+9;
+        strengthA = strengthA == 0 ? 0 : strengthA + 9;
+        strengthB = strengthB == 0 ? 0 : strengthB + 9;
 
 
         // 创建 JSON 请求
-        JSONObject requestData = new JSONObject();
-        requestData.put("strengthA", strengthA);
-        requestData.put("strengthB", strengthB);
+        JsonObject requestData = new JsonObject();
+        requestData.addProperty("strengthA", strengthA);
+        requestData.addProperty("strengthB", strengthB);
 
-        JSONObject request = new JSONObject();
-        request.put("id", 100002);
-        request.put("method", "setStrength");
-        request.put("data", requestData);
+        JsonObject request = new JsonObject();
+        request.addProperty("id", 100002);
+        request.addProperty("method", "setStrength");
+        request.add("data", requestData);
 
         // 发送 JSON 请求
         client.sendText(request.toString());
@@ -179,7 +201,7 @@ public class CommandDglabStrength extends CommandBase implements CommandDglabCon
         boolean channelA;
         if (channel.equals("a")) {
             channelA = true;
-            if(currentStrengthA + addedStrength > maxStrengthA){
+            if (currentStrengthA + addedStrength > maxStrengthA) {
                 addedStrength = maxStrengthA - currentStrengthA;
                 sender.addChatMessage(new ChatComponentText("Strength A exceeds the maximum limit (" + maxStrengthA + "). Setting to max limit."));
             }
@@ -187,7 +209,7 @@ public class CommandDglabStrength extends CommandBase implements CommandDglabCon
             currentStrengthA = currentStrengthA + addedStrength;
         } else if (channel.equals("b")) {
             channelA = false;
-            if(currentStrengthB + addedStrength > maxStrengthB){
+            if (currentStrengthB + addedStrength > maxStrengthB) {
                 addedStrength = maxStrengthB - currentStrengthB;
                 sender.addChatMessage(new ChatComponentText("Strength B exceeds the maximum limit (" + maxStrengthB + "). Setting to max limit."));
             }
@@ -207,18 +229,18 @@ public class CommandDglabStrength extends CommandBase implements CommandDglabCon
         }
 
         // 创建 JSON 请求
-        JSONObject requestData = new JSONObject();
-        requestData.put("channel", channelA);
-        requestData.put("strength", addedStrength);
+        JsonObject requestData = new JsonObject();
+        requestData.addProperty("channel", channelA);
+        requestData.addProperty("strength", addedStrength);
 
-        JSONObject request = new JSONObject();
-        request.put("id", 100003); // 使用唯一ID
-        request.put("method", "addStrength");
-        request.put("data", requestData);
+        JsonObject request = new JsonObject();
+        request.addProperty("id", 100003); // 使用唯一ID
+        request.addProperty("method", "addStrength");
+        request.add("data", requestData);
 
         // 发送 JSON 请求
         client.sendText(request.toString());
-        System.out.println(request.toString());
+        System.out.println(request);
     }
 
     public static void queryStrength(ICommandSender sender, boolean silent) {
@@ -233,13 +255,14 @@ public class CommandDglabStrength extends CommandBase implements CommandDglabCon
         }
 
         // 创建 JSON 请求
-        JSONObject request = new JSONObject();
-        if(!silent)
-            request.put("id", 100001);
-        else
-            request.put("id", 100000);
+        JsonObject request = new JsonObject();
+        if (!silent) {
+            request.addProperty("id", 100001);
+        } else {
+            request.addProperty("id", 100000);
+        }
 
-        request.put("method", "queryStrength");
+        request.addProperty("method", "queryStrength");
 
         // 发送 JSON 请求
         client.sendText(request.toString());
