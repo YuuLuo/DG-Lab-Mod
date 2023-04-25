@@ -2,13 +2,14 @@ package com.yuluo.dglab;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.ChatComponentText;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.Timer;
+import java.util.TimerTask;
 
 public class CommandDglabPunish extends CommandBase {
 
@@ -27,15 +28,14 @@ public class CommandDglabPunish extends CommandBase {
     public void onLivingHurt(LivingHurtEvent event) {
         if (event.entityLiving instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) event.entityLiving;
-            ICommandSender sender = (ICommandSender) player;
 
             if (punishActive && System.currentTimeMillis() > punishEndTime) {
                 float damage = event.ammount;
                 System.out.println("received punish damage: " + damage);
-                startPunish(sender, damage);
+                startPunish(player, damage);
             } else if (ultraPunishActive) {
                 float damage = event.ammount;
-                startUltraPunish(sender, damage);
+                startUltraPunish(player, damage);
             }
             System.out.println(punishActive + " " + (System.currentTimeMillis() > punishEndTime) + " " + System.currentTimeMillis() + " " + punishEndTime);
             float damage = event.ammount;
@@ -82,20 +82,20 @@ public class CommandDglabPunish extends CommandBase {
 
         sender.addChatMessage(message);
         // 在惩罚结束时恢复基础强度值
-        punishEndTime = System.currentTimeMillis() + (punishTime * 1000);
-        new java.util.Timer().schedule(
-                new java.util.TimerTask() {
-                    @Override
-                    public void run() {
-                        CommandDglabStrength.instance.setStrength(sender, CommandDglabStrength.getBaseStrengthA(), CommandDglabStrength.getBaseStrengthB());
-                    }
-                },
-                punishTime * 1000
+        punishEndTime = System.currentTimeMillis() + (punishTime * 1000L);
+        new Timer().schedule(
+            new TimerTask() {
+                @Override
+                public void run() {
+                    CommandDglabStrength.instance.setStrength(sender, CommandDglabStrength.getBaseStrengthA(), CommandDglabStrength.getBaseStrengthB());
+                }
+            },
+            punishTime * 1000L
         );
     }
 
     private void startUltraPunish(final ICommandSender sender, float damage) {
-        System.out.println(CommandDglabStrength.getCurrentStrengthA() +" "+ CommandDglabStrength.getCurrentStrengthB());
+        System.out.println(CommandDglabStrength.getCurrentStrengthA() + " " + CommandDglabStrength.getCurrentStrengthB());
         // 获取当前强度值
         CommandDglabStrength.queryStrength(sender, true);
         // 计算惩罚强度值
@@ -103,12 +103,11 @@ public class CommandDglabPunish extends CommandBase {
         int punishStrengthB = (int) (damage * punishRate);
 
 
-
-        if(punishStrengthA + CommandDglabStrength.getCurrentStrengthA() > CommandDglabStrength.getMaxStrengthA()){
+        if (punishStrengthA + CommandDglabStrength.getCurrentStrengthA() > CommandDglabStrength.getMaxStrengthA()) {
             sender.addChatMessage(new ChatComponentText("Strength A exceeds the maximum limit (" + CommandDglabStrength.getMaxStrengthA() + "). Setting to max limit."));
             punishStrengthA = CommandDglabStrength.getMaxStrengthA() - CommandDglabStrength.getCurrentStrengthA();
         }
-        if(punishStrengthB + CommandDglabStrength.getCurrentStrengthB() > CommandDglabStrength.getMaxStrengthB()){
+        if (punishStrengthB + CommandDglabStrength.getCurrentStrengthB() > CommandDglabStrength.getMaxStrengthB()) {
             sender.addChatMessage(new ChatComponentText("Strength B exceeds the maximum limit (" + CommandDglabStrength.getMaxStrengthB() + "). Setting to max limit."));
             punishStrengthB = CommandDglabStrength.getMaxStrengthB() - CommandDglabStrength.getCurrentStrengthB();
         }
@@ -118,7 +117,6 @@ public class CommandDglabPunish extends CommandBase {
         int resultStrengthB = CommandDglabStrength.getCurrentStrengthB() + punishStrengthB;
         CommandDglabStrength.instance.addStrength(sender, "a", punishStrengthA);
         CommandDglabStrength.instance.addStrength(sender, "b", punishStrengthB);
-
 
 
         //设置字体颜色
@@ -154,19 +152,19 @@ public class CommandDglabPunish extends CommandBase {
 
 
         // 在惩罚结束时恢复基础强度值
-        punishEndTime = System.currentTimeMillis() + (punishTime * 1000);
+        punishEndTime = System.currentTimeMillis() + (punishTime * 1000L);
         if (ultraPunishTimer != null) {
             ultraPunishTimer.cancel(); // 取消上一个 Timer
         }
-        ultraPunishTimer = new java.util.Timer();
+        ultraPunishTimer = new Timer();
         ultraPunishTimer.schedule(
-                new java.util.TimerTask() {
-                    @Override
-                    public void run() {
-                        CommandDglabStrength.instance.setStrength(sender, CommandDglabStrength.getBaseStrengthA(), CommandDglabStrength.getBaseStrengthB());
-                    }
-                },
-                punishTime * 1000
+            new TimerTask() {
+                @Override
+                public void run() {
+                    CommandDglabStrength.instance.setStrength(sender, CommandDglabStrength.getBaseStrengthA(), CommandDglabStrength.getBaseStrengthB());
+                }
+            },
+            punishTime * 1000L
         );
     }
 
@@ -180,75 +178,89 @@ public class CommandDglabPunish extends CommandBase {
 
         String subCommand = args[0].toLowerCase();
 
-        if (subCommand.equals("punish")) {
-            if (sender instanceof EntityPlayer) {
-                playerToPunish = (EntityPlayer) sender;
-            } else {
-                sender.addChatMessage(new ChatComponentText("This command can only be used by a player."));
-                return;
-            }
+        switch (subCommand) {
+            case "punish": {
+                if (sender instanceof EntityPlayer) {
+                    playerToPunish = (EntityPlayer) sender;
+                } else {
+                    sender.addChatMessage(new ChatComponentText("This command can only be used by a player."));
+                    return;
+                }
 
-            if (args[1].equals("start")) {
-                if(punishActive){
-                    sender.addChatMessage(new ChatComponentText("Punish already started!"));
-                }else {
-                    if(ultraPunishActive){
-                        sender.addChatMessage(new ChatComponentText("UltraPunish task is running, stopping ultraPunish task."));
+                String option = args[1].toLowerCase();
+
+                if (option.equals("start")) {
+                    if (punishActive) {
+                        sender.addChatMessage(new ChatComponentText("Punish already started!"));
+                    } else {
+                        if (ultraPunishActive) {
+                            sender.addChatMessage(new ChatComponentText(
+                                "UltraPunish task is running, stopping ultraPunish task."));
+                            ultraPunishActive = false;
+                        }
+                        punishActive = true;
+                        sender.addChatMessage(new ChatComponentText("Punish started for player: " + playerToPunish.getName()));
+                    }
+                } else if (option.equals("stop")) {
+                    if (!punishActive) {
+                        sender.addChatMessage(new ChatComponentText("There's no punish task to stop!"));
+                    } else {
+                        punishActive = false;
+                        sender.addChatMessage(new ChatComponentText("Punish stopped for player: " + playerToPunish.getName()));
+                        playerToPunish = null;
+                    }
+                } else {
+                    sender.addChatMessage(new ChatComponentText("Usage: " + getCommandUsage(sender)));
+                }
+                break;
+            }
+            case "ultrapunish": {
+                if (sender instanceof EntityPlayer) {
+                    playerToPunish = (EntityPlayer) sender;
+                } else {
+                    sender.addChatMessage(new ChatComponentText("This command can only be used by a player."));
+                    return;
+                }
+
+                String option = args[1].toLowerCase();
+
+                if (option.equals("start")) {
+                    if (ultraPunishActive) {
+                        sender.addChatMessage(new ChatComponentText("UltraPunish already started!"));
+                    } else {
+                        if (punishActive) {
+                            sender.addChatMessage(new ChatComponentText("Punish task is running, stopping punish task."));
+                            punishActive = false;
+                        }
+                        ultraPunishActive = true;
+                        sender.addChatMessage(new ChatComponentText("UltraPunish started for player: " + playerToPunish.getName()));
+                    }
+                } else if (option.equals("stop")) {
+                    if (!ultraPunishActive) {
+                        sender.addChatMessage(new ChatComponentText("There's no ultraPunish task to stop!"));
+                    } else {
+                        sender.addChatMessage(new ChatComponentText("UltraPunish stopped for player: " + playerToPunish.getName()));
+                        playerToPunish = null;
                         ultraPunishActive = false;
                     }
-                    punishActive = true;
-                    sender.addChatMessage(new ChatComponentText("Punish started for player: " + playerToPunish.getName()));
                 }
-            } else if (args[1].equals("stop")) {
-                if(!punishActive){
-                    sender.addChatMessage(new ChatComponentText("There's no punish task to stop!"));
-                }else{
-                    punishActive = false;
-                    sender.addChatMessage(new ChatComponentText("Punish stopped for player: " + playerToPunish.getName()));
-                    playerToPunish = null;
-                }
-            } else {
+                break;
+            }
+            case "setpunishtime":
+                punishTime = Integer.parseInt(args[1]);
+                sender.addChatMessage(new ChatComponentText("Successfully set punishTime to: " + punishTime));
+                break;
+            case "setpunishrate":
+                punishRate = Integer.parseInt(args[1]);
+                sender.addChatMessage(new ChatComponentText("Successfully set punishRate to: " + punishRate));
+                break;
+            case "getpunishsetting":
+                sender.addChatMessage(new ChatComponentText("Punish time: " + punishTime));
+                sender.addChatMessage(new ChatComponentText("Punish rate: " + punishRate));
+                break;
+            default:
                 sender.addChatMessage(new ChatComponentText("Usage: " + getCommandUsage(sender)));
-            }
-        }else if(subCommand.equals("ultrapunish")) {
-            if (sender instanceof EntityPlayer) {
-                playerToPunish = (EntityPlayer) sender;
-            } else {
-                sender.addChatMessage(new ChatComponentText("This command can only be used by a player."));
-                return;
-            }
-
-            if (args[1].equals("start")) {
-                if(ultraPunishActive){
-                    sender.addChatMessage(new ChatComponentText("UltraPunish already started!"));
-                }else {
-                    if(punishActive){
-                        sender.addChatMessage(new ChatComponentText("Punish task is running, stopping punish task."));
-                        punishActive = false;
-                    }
-                    ultraPunishActive = true;
-                    sender.addChatMessage(new ChatComponentText("UltraPunish started for player: " + playerToPunish.getName()));
-                }
-            } else if (args[1].equals("stop")) {
-                if(!ultraPunishActive){
-                    sender.addChatMessage(new ChatComponentText("There's no ultraPunish task to stop!"));
-                }else{
-                    sender.addChatMessage(new ChatComponentText("UltraPunish stopped for player: " + playerToPunish.getName()));
-                    playerToPunish = null;
-                    ultraPunishActive = false;
-                }
-            }
-        }else if(subCommand.equals("setpunishtime")){
-            punishTime = Integer.parseInt(args[1]);
-            sender.addChatMessage(new ChatComponentText("Successfully set punishTime to: " + punishTime));
-        }else if(subCommand.equals("setpunishrate")){
-            punishRate = Integer.parseInt(args[1]);
-            sender.addChatMessage(new ChatComponentText("Successfully set punishRate to: " + punishRate));
-        }else if(subCommand.equals("getpunishsetting")){
-            sender.addChatMessage(new ChatComponentText("Punish time: " + punishTime));
-            sender.addChatMessage(new ChatComponentText("Punish rate: " + punishRate));
-        } else {
-            sender.addChatMessage(new ChatComponentText("Usage: " + getCommandUsage(sender)));
+                break;
         }
     }
 

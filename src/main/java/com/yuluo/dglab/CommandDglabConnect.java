@@ -1,7 +1,13 @@
 package com.yuluo.dglab;
 
-import com.neovisionaries.ws.client.*;
-import net.minecraft.command.*;
+import com.neovisionaries.ws.client.WebSocket;
+import com.neovisionaries.ws.client.WebSocketAdapter;
+import com.neovisionaries.ws.client.WebSocketException;
+import com.neovisionaries.ws.client.WebSocketFactory;
+import com.neovisionaries.ws.client.WebSocketFrame;
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.command.WrongUsageException;
 import net.minecraft.util.ChatComponentText;
 
 import java.io.IOException;
@@ -19,12 +25,12 @@ public class CommandDglabConnect extends CommandBase {
     }
 
     public static WebSocket getClientInstance() {
-        if (instance != null && instance.ws != null) {
-            System.out.println("Returning WebSocket client instance: " + instance.ws.toString());
+        if (instance != null && ws != null) {
+            System.out.println("Returning WebSocket client instance: " + ws);
         } else {
             System.out.println("No WebSocket client instance found.");
         }
-        return instance.ws;
+        return ws;
     }
 
     public interface WebSocketMessageCallback {
@@ -82,9 +88,7 @@ public class CommandDglabConnect extends CommandBase {
             } catch (URISyntaxException e) {
                 sender.addChatMessage(new ChatComponentText("Error: " + e.getMessage()));
                 e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (WebSocketException e) {
+            } catch (IOException | WebSocketException e) {
                 e.printStackTrace();
             }
         } else {
